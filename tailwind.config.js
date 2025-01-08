@@ -10,6 +10,9 @@ module.exports = {
         darkest: "#CF3E8A",
       },
     },
+    backgroundImage: {
+      "gradient-barbie": "linear-gradient(90deg, #FF69B4, #FF1493)",
+    },
   },
   plugins: [],
 };
