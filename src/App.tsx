@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import Header from "./components/Header";
-import { CompanyProfile } from "./types";
+import { Company } from "./types";
 
 const App: React.FC = () => {
   // Initialize state with the default company data.
-  const [company, setCompany] = useState<CompanyProfile>({
+  const [company, setCompany] = useState<Company>({
     symbol: "AGO.WA",
     companyName: "Agora S.A.",
     image: "https://financialmodelingprep.com/image-stock/AGO.WA.png",
@@ -14,7 +14,7 @@ const App: React.FC = () => {
   // Function to fetch company data based on the symbol.
   const fetchCompanyData = (symbol: string) => {
     // Example static company data for simulation
-    const companyData: { [key: string]: CompanyProfile } = {
+    const companyData: { [key: string]: Company } = {
       "AGO.WA": {
         symbol: "AGO.WA",
         companyName: "Agora S.A.",
