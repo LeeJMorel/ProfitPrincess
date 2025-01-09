@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ company, onCompanyChange }) => {
   };
 
   return (
-    <header className="bg-gradient-barbie text-white p-6 rounded-lg shadow-lg m-4">
+    <header className="bg-gradient-barbie text-white p-6 rounded-lg shadow-lg">
       {/* Container for the header content */}
       <div className="flex flex-col sm:flex-row sm:justify-between items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
         {/* Left side: Company info (logo, name, symbol, industry) */}

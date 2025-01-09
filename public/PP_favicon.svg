@@ -1,0 +1,17 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+	<title>PP_favicon</title>
+	<style>
+		tspan { white-space:pre } 
+		.s0 { fill: #ff1493 } 
+		.t1 { font-size: 250px;fill: #ffffff;font-weight: 500;font-style: italic;font-family: "BarbieMediumItalic", "Barbie" } 
+	</style>
+	<path id="Background" class="s0" d="m37.2 235.5l141.2 152.1c5.8 6.3 13.6 9.9 21.6 9.9 8 0 15.8-3.6 21.6-9.9l141.2-152.1c23.8-25.6 37.2-61.4 37.2-98.8v-5.2c0-63.1-39.5-116.8-93.3-127.2-35.6-6.8-71.9 6.6-97.3 36l-9.4 10.8-9.4-10.8c-25.4-29.4-61.7-42.8-97.3-36-53.8 10.4-93.3 64.1-93.3 127.2v5.2c0 37.4 13.4 73.2 37.2 98.8z"/>
+	<text id="P copy 2" style="transform: matrix(1.298,0,0,1.298,2.469,270.05)" >
+		<tspan x="0" y="0" class="t1">P
+</tspan>
+	</text>
+	<text id="P copy 3" style="transform: matrix(1.298,0,0,1.298,158.469,369.05)" >
+		<tspan x="0" y="0" class="t1">P
+</tspan>
+	</text>
+</svg>

@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import Header from "./components/Header";
 import { Company } from "./types";
+import LoadingScreen from "./components/LoadingScreen";
 
 const App: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const handleLoadingComplete = () => {
+    setIsLoading(false);
+  };
   // Initialize state with the default company data.
   const [company, setCompany] = useState<Company>({
     symbol: "AGO.WA",
@@ -36,7 +41,11 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
-      <Header company={company} onCompanyChange={fetchCompanyData} />
+      {isLoading ? (
+        <LoadingScreen onLoaded={handleLoadingComplete} />
+      ) : (
+        <Header company={company} onCompanyChange={fetchCompanyData} />
+      )}
     </div>
   );
 };

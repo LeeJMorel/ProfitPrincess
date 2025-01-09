@@ -6,6 +6,10 @@ export interface Company {
   industry: string;
 }
 
+export interface LoadingScreenProps {
+  onLoaded: () => void;
+}
+
 export interface HeaderProps {
   company: Company;
   onCompanyChange: (symbol: string) => void;
