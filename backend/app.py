@@ -1,6 +1,8 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 import requests
+from flask_cors import CORS
 from config import API_KEY
+import csv
 
 """
 This app is designed for low user count as it retrieves the income statements 
@@ -18,33 +20,62 @@ Filters and sorting are individual methods for future maintainability and testin
 
 app = Flask(__name__)
 
-BASE_URL = "https://financialmodelingprep.com/api/v3"
-PROFILE_URL = "https://financialmodelingprep.com/stable/profile-bulk"
+# Enable CORS for all routes
+CORS(app)
 
-company_profiles = []  # Stores bulk company profiles
+BASE_URL = "https://financialmodelingprep.com"
+
+bulk_profiles = []
 current_income = []  # Stores the currently selected company's income statement
+
+@app.before_request
+def load_company_profiles():
+    """Load company profiles on the first request."""
+    if not bulk_profiles:
+        # Fetch and cache the profiles if not in cache
+        fetch_profiles()
 
 def fetch_profiles():
     """Fetch bulk company profiles and store them."""
+    global bulk_profiles
     try:
-        profile_url = f"{BASE_URL}/stable/profile-bulk?part=0"
+        profile_url = f"{BASE_URL}/stable/profile-bulk?part=0&apikey={API_KEY}"
         response = requests.get(profile_url)
-        
+
         if response.status_code == 200:
-            company_profiles = response.json()
-            print("Company profiles successfully loaded.")
-            return company_profiles
+            # Parse the CSV content
+            csv_data = response.text.splitlines()
+            reader = csv.DictReader(csv_data)
+            bulk_profiles = [row for row in reader]  # Convert to list of dictionaries
+            print(f"Fetched {len(bulk_profiles)} company profiles.")
+            return bulk_profiles
         else:
             print("Failed to fetch company profiles.")
             return []
     except Exception as e:
         print(f"Error fetching company profiles: {e}")
         return []
+
+@app.route('/fetch-data', methods=['GET'])
+def fetch_data():
+    """Fetch company data by symbol."""
+    symbol = request.args.get('query')  # The company symbol
+
+    if not bulk_profiles:
+        fetch_profiles()
+
+    # Find the company by symbol from the pre-loaded profiles
+    company = next((profile for profile in bulk_profiles if profile['symbol'].strip() == symbol.strip()), None)
+    if company:
+        print(f"Fetched {company} profile.")
+        return jsonify(company), 200
+    else:
+        return jsonify({"error": "Company not found"}), 404
     
 def fetch_income(company_acronym):
     """Fetch income statement for a specific company and store it."""
     try:
-        income_statement_url = f"{BASE_URL}/income-statement/{company_acronym}?period=annual&apikey={API_KEY}"
+        income_statement_url = f"{BASE_URL}/api/v3/income-statement/{company_acronym}?period=annual&apikey={API_KEY}"
         response = requests.get(income_statement_url)
         
         if response.status_code == 200:
