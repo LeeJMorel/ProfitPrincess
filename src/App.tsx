@@ -37,7 +37,10 @@ const App: React.FC = () => {
       ) : (
         <>
           <Header company={company} onCompanyChange={handleSymbolChange} />
-          <Card title={"Company Data for AAPL"} color={"lightest"}>
+          <Card
+            title={"Company Financial Data for " + company.companyName}
+            color={"lightest"}
+          >
             <DataTable symbol={strippedSymbol} />
           </Card>
         </>
