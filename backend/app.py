@@ -72,22 +72,29 @@ def fetch_data():
     else:
         return jsonify({"error": "Company not found"}), 404
     
-def fetch_income(company_acronym):
-    """Fetch income statement for a specific company and store it."""
+@app.route('/fetch-income', methods=['GET'])
+def fetch_income():
+    """Fetch income statement for a specific company."""
+    global current_income
+    symbol = request.args.get('query')  # The company symbol
+    
+    if not symbol:
+        return jsonify({"error": "Symbol is required"}), 400
+
     try:
-        income_statement_url = f"{BASE_URL}/api/v3/income-statement/{company_acronym}?period=annual&apikey={API_KEY}"
+        income_statement_url = f"{BASE_URL}/api/v3/income-statement/{symbol}?period=annual&apikey={API_KEY}"
         response = requests.get(income_statement_url)
         
         if response.status_code == 200:
             current_income = response.json()
-            print(f"Income statement for {company_acronym} successfully loaded.")
-            return current_income
+            print(f"Income statement for {symbol} successfully loaded.")
+            return jsonify(current_income), 200
         else:
-            print(f"Failed to fetch income statement for {company_acronym}.")
-            return []
+            print(f"Failed to fetch income statement for {symbol}.")
+            return jsonify({"error": "Failed to fetch income statement"}), 404
     except Exception as e:
         print(f"Error fetching income statement: {e}")
-        return []
+        return jsonify({"error": "Internal server error"}), 500
 
 def filter_by_date_range(data, start_year, end_year):
     """
