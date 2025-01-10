@@ -164,7 +164,7 @@ def sort_income(field, ascending=True):
         reverse=not ascending
     )
 
-@app.route('/filter-sort-income', methods=['POST'])
+@app.route('/filter-sort-income', methods=['GET'])
 def filter_sort_income():
     """
     Endpoint to filter and sort income statements based on user input.
@@ -183,15 +183,15 @@ def filter_sort_income():
         JSON: Filtered and sorted income statements.
     """
     try:
-        data = requests.get_json()
-        start_year = data.get('start_year')
-        end_year = data.get('end_year')
-        min_revenue = data.get('min_revenue')
-        max_revenue = data.get('max_revenue')
-        min_income = data.get('min_income')
-        max_income = data.get('max_income')
-        sort_field = data.get('sort_field')
-        ascending = data.get('ascending', True)
+        # Extract query parameters
+        start_year = request.args.get('start_year', type=int)
+        end_year = request.args.get('end_year', type=int)
+        min_revenue = request.args.get('min_revenue', type=float)
+        max_revenue = request.args.get('max_revenue', type=float)
+        min_income = request.args.get('min_income', type=float)
+        max_income = request.args.get('max_income', type=float)
+        sort_field = request.args.get('sort_field', type=str)
+        ascending = request.args.get('ascending', default='true').lower() == 'true'
         
         # Apply filters in sequence if parameters are provided
         filtered_data = current_income[:]  # Start with the full dataset
@@ -209,10 +209,11 @@ def filter_sort_income():
         if sort_field:
             filtered_data = sort_income(filtered_data, sort_field, ascending)
         
-        return {"status": "success", "data": filtered_data}, 200
+        return jsonify({"status": "success", "data": filtered_data}), 200
     
     except Exception as e:
-        return {"status": "error", "message": str(e)}, 400
+        print(f"Error in filter_sort_income: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 400
 
 
 

@@ -1,5 +1,17 @@
 export interface DataTableProps {
   symbol: string;
+  columns: (keyof IncomeStatement)[];
+}
+
+export interface FilterSortParams {
+  start_year?: number;
+  end_year?: number;
+  min_revenue?: number;
+  max_revenue?: number;
+  min_income?: number;
+  max_income?: number;
+  sort_field?: string;
+  ascending?: boolean;
 }
 
 export interface HeaderProps {

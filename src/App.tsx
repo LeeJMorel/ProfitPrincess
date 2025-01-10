@@ -41,7 +41,17 @@ const App: React.FC = () => {
             title={"Company Financial Data for " + company.companyName}
             color={"lightest"}
           >
-            <DataTable symbol={strippedSymbol} />
+            <DataTable
+              symbol={strippedSymbol}
+              columns={[
+                "date",
+                "revenue",
+                "netIncome",
+                "grossProfit",
+                "eps",
+                "operatingIncome",
+              ]}
+            />
           </Card>
         </>
       )}

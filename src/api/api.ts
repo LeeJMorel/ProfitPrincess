@@ -1,5 +1,5 @@
 import useFetch from "../hooks/useFetch";
-import { CompanyProfile, IncomeStatement } from "../types";
+import { CompanyProfile, FilterSortParams, IncomeStatement } from "../types";
 
 export const useFetchBySymbol = (
   symbol: string
@@ -23,11 +23,18 @@ export const useFetchBySymbolIncome = (
   return useFetch(`http://localhost:5000/fetch-income?query=${symbol}`);
 };
 
-export const useFetchSort = (): {
-  data: IncomeStatement | null;
+export const useFetchSort = (
+  params: FilterSortParams
+): {
+  data: IncomeStatement[] | null;
   isLoading: boolean;
   error: string | null;
 } => {
-  // return useFetch(`/api/filter-sort-income`);
-  return useFetch(`http://localhost:5000/filter-sort-income`);
+  // Convert params to query string
+  const query = new URLSearchParams(
+    params as Record<string, string>
+  ).toString();
+
+  // Use query string in URL
+  return useFetch(`http://localhost:5000/filter-sort-income?${query}`);
 };
