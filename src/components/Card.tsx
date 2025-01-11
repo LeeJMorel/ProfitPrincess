@@ -17,7 +17,7 @@ const Card: React.FC<CardProps> = ({ title, children, color = "primary" }) => {
 
   return (
     <div
-      className={`${backgroundColor[color]} text-black p-6 shadow-lg rounded-lg flex flex-col space-y-4`}
+      className={`${backgroundColor[color]} text-black p-6 shadow-lg rounded-lg flex flex-col space-y-4 m-4`}
     >
       <h2 className="text-2xl">{title}</h2>
       <div className="flex-grow">{children}</div>

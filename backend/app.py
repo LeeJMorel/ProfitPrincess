@@ -156,7 +156,16 @@ def filter_income(data, filter_fields):
             min_value = value
             max_value = filter_fields.get(f"{base_field}_max")
             if max_value is not None:
-                if min_value is not None and max_value is not None:
+                if base_field == "date":
+                    # Extract year from date strings
+                    min_year = min_value
+                    max_year = max_value
+                    filtered_data = [
+                        record for record in filtered_data
+                        if min_year <= int(record.get(base_field, "0000-00-00")[:4]) <= max_year
+                    ]
+                else:
+                    # Handle numeric fields
                     filtered_data = [
                         record for record in filtered_data
                         if min_value <= record.get(base_field, float('inf')) <= max_value

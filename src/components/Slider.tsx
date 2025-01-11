@@ -88,7 +88,17 @@ const TooltipSlider: React.FC<TooltipSliderProps> = ({
     </HandleTooltip>
   );
 
-  return <Slider {...props} handleRender={tipHandleRender} />;
+  return (
+    <Slider
+      {...props}
+      handleRender={tipHandleRender}
+      styles={{
+        track: {
+          background: "pink",
+        },
+      }}
+    />
+  );
 };
 
 export default TooltipSlider;

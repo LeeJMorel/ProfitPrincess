@@ -27,6 +27,9 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
     [key: string]: [number, number];
   }>({});
 
+  // Track if the data is available for the company
+  const [hasData, setHasData] = useState<boolean>(false);
+
   // Combine filterRanges into fields in sortParams
   const combinedParams = {
     ...sortParams,
@@ -57,6 +60,15 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
 
   // Fallback to empty array if `data` is null or undefined
   const validData = data ?? [];
+
+  // Set initial data availability
+  useEffect(() => {
+    if (initialData && initialData.length > 0) {
+      setHasData(true);
+    } else {
+      setHasData(false);
+    }
+  }, [initialData]);
 
   // Handle sorting by updating sortParams
   const handleSort = (field: keyof IncomeStatement) => {
@@ -119,8 +131,26 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
     );
   };
 
+  const handleReset = () => {
+    // Implement reset logic (reset filter ranges and sorting)
+    setFilterRanges({});
+    setSortParams({ sort_field: undefined, ascending: true, fields: {} });
+  };
+
+  /*
+  This "if error" slightly redundant as I render this by default when no data is available. 
+  Theoretically it should only render this given a 404 error 
+  but I did not have time fore proper testing frameworks 
+  to really ensure a high quality user experience 
+  so this placeholder handles that for now.
+  */
   if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
+    return (
+      <div className="text-gray-600">
+        This company may not have data available. Try a different company
+        symbol, for example: AAPL.NE or AGO.WA.
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -130,86 +160,103 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
   return (
     <div className="DataTable p-4">
       {validData && validData.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="table-auto min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-            <thead className="bg-gray-200 text-gray-700">
-              <tr>
-                {columns.map((col, index) => (
-                  <th
-                    key={col}
-                    className={`px-3 py-2 text-left cursor-pointer whitespace-nowrap ${
-                      index % 2 === 0 ? "bg-gray-100" : "bg-gray-200"
-                    }`}
-                  >
-                    <div className="flex flex-col items-start">
-                      <div className="flex items-center justify-between w-full">
-                        <span>
-                          {col.charAt(0).toUpperCase() + col.slice(1)}
-                        </span>
-                        <span
-                          className="ml-1 cursor-pointer"
-                          onClick={() =>
-                            handleSort(col as keyof IncomeStatement)
-                          }
-                        >
-                          {getArrow(col as keyof IncomeStatement)}
-                        </span>
-                      </div>
-                      {/* Conditionally render slider for numeric and date fields */}
-                      {(typeof validData[0][col as keyof IncomeStatement] ===
-                        "number" ||
-                        col.includes("date")) &&
-                        sliderMinMax[col] && (
-                          <TooltipSlider
-                            range
-                            min={sliderMinMax[col][0]}
-                            max={sliderMinMax[col][1]}
-                            defaultValue={
-                              filterRanges[col] ?? sliderMinMax[col]
-                            }
-                            tipFormatter={(value: any) => `${value}`}
-                            onChange={(value: number | number[]) => {
-                              if (Array.isArray(value)) {
-                                handleRangeChange(
-                                  col,
-                                  value as [number, number]
-                                ); // Type assertion
-                              } else {
-                                handleRangeChange(col, [value, value]); // Treat as range
-                              }
-                            }}
-                          />
-                        )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="text-gray-700">
-              {validData.map((incomeStatement: IncomeStatement) => (
-                <tr
-                  key={incomeStatement.date}
-                  className="border-t hover:bg-gray-50"
-                >
+        <>
+          <div className="overflow-x-auto">
+            <table className="table-auto min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+              <thead className="bg-gray-200 text-gray-700">
+                <tr>
                   {columns.map((col, index) => (
-                    <td
+                    <th
                       key={col}
-                      className={`px-4 py-2 ${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"
+                      className={`px-3 py-2 text-left cursor-pointer whitespace-nowrap ${
+                        index % 2 === 0 ? "bg-gray-100" : "bg-gray-200"
                       }`}
                     >
-                      {typeof incomeStatement[col] === "number"
-                        ? incomeStatement[col].toLocaleString()
-                        : incomeStatement[col]}
-                    </td>
+                      <div className="flex flex-col items-start">
+                        <div className="flex items-center justify-between w-full">
+                          <span>
+                            {col.charAt(0).toUpperCase() + col.slice(1)}
+                          </span>
+                          <span
+                            className="ml-1 cursor-pointer"
+                            onClick={() =>
+                              handleSort(col as keyof IncomeStatement)
+                            }
+                          >
+                            {getArrow(col as keyof IncomeStatement)}
+                          </span>
+                        </div>
+                        {(typeof validData[0][col as keyof IncomeStatement] ===
+                          "number" ||
+                          col.includes("date")) &&
+                          sliderMinMax[col] && (
+                            <TooltipSlider
+                              range
+                              min={sliderMinMax[col][0]}
+                              max={sliderMinMax[col][1]}
+                              defaultValue={
+                                filterRanges[col] ?? sliderMinMax[col]
+                              }
+                              tipFormatter={(value: any) => `${value}`}
+                              onChange={(value: number | number[]) => {
+                                if (Array.isArray(value)) {
+                                  handleRangeChange(
+                                    col,
+                                    value as [number, number]
+                                  ); // Type assertion
+                                } else {
+                                  handleRangeChange(col, [value, value]); // Treat as range
+                                }
+                              }}
+                            />
+                          )}
+                      </div>
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="text-gray-700">
+                {validData.map((incomeStatement: IncomeStatement) => (
+                  <tr
+                    key={incomeStatement.date}
+                    className="border-t hover:bg-gray-50"
+                  >
+                    {columns.map((col, index) => (
+                      <td
+                        key={col}
+                        className={`px-4 py-2 ${
+                          index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"
+                        }`}
+                      >
+                        {typeof incomeStatement[col] === "number"
+                          ? incomeStatement[col].toLocaleString()
+                          : incomeStatement[col]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : (
-        <div className="text-gray-600">No income statements available.</div>
+        <div className="text-gray-600">
+          {hasData ? (
+            <>
+              No income statements available.
+              <div className="mt-4">
+                <button
+                  onClick={handleReset}
+                  className="bg-darkest text-white px-4 py-2 rounded"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            </>
+          ) : (
+            "This company may not have data available. Try a different company symbol, for example: AAPL.NE or AGO.WA."
+          )}
+        </div>
       )}
     </div>
   );
