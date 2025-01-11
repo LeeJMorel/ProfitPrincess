@@ -4,14 +4,14 @@ export interface DataTableProps {
 }
 
 export interface FilterSortParams {
-  start_year?: number;
-  end_year?: number;
-  min_revenue?: number;
-  max_revenue?: number;
-  min_income?: number;
-  max_income?: number;
   sort_field?: string;
   ascending?: boolean;
+  fields: {
+    [key: string]: {
+      min?: number;
+      max?: number;
+    };
+  };
 }
 
 export interface HeaderProps {

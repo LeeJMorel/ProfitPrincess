@@ -30,11 +30,14 @@ export const useFetchSort = (
   isLoading: boolean;
   error: string | null;
 } => {
-  // Convert params to query string
-  const query = new URLSearchParams(
-    params as Record<string, string>
-  ).toString();
+  // Convert params object to a JSON string
+  const query = JSON.stringify(params);
 
-  // Use query string in URL
-  return useFetch(`http://localhost:5000/filter-sort-income?${query}`);
+  // Encode the query to ensure it's safely passed in the URL
+  const encodedQuery = encodeURIComponent(query);
+
+  // return useFetch(`/api/filter-sort-income?query=${encodedQuery}`);
+  return useFetch(
+    `http://localhost:5000/filter-sort-income?query=${encodedQuery}`
+  );
 };

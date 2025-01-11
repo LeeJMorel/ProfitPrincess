@@ -3,6 +3,8 @@ import requests
 from flask_cors import CORS
 from config import API_KEY
 import csv
+from urllib.parse import unquote
+import json
 
 """
 This app is designed for low user count as it retrieves the income statements 
@@ -20,7 +22,7 @@ Filters and sorting are individual methods for future maintainability and testin
 
 app = Flask(__name__)
 
-# Enable CORS for all routes
+# Enable CORS for all route, should be removed for launch, security risk
 CORS(app)
 
 BASE_URL = "https://financialmodelingprep.com"
@@ -30,20 +32,36 @@ current_income = []  # Stores the currently selected company's income statement
 
 @app.before_request
 def load_company_profiles():
-    """Load company profiles on the first request."""
+    """
+    Load company profiles on the first request.
+    
+    Args:
+        None
+    
+    Returns:
+        None
+    """
+        
     if not bulk_profiles:
-        # Fetch and cache the profiles if not in cache
         fetch_profiles()
 
 def fetch_profiles():
-    """Fetch bulk company profiles and store them."""
+    """
+    Fetch and cache bulk company profiles.
+    
+    Args:
+        None
+    
+    Returns:
+        list: A list of company profiles (dictionaries).
+    """
+
     global bulk_profiles
     try:
         profile_url = f"{BASE_URL}/stable/profile-bulk?part=0&apikey={API_KEY}"
         response = requests.get(profile_url)
 
         if response.status_code == 200:
-            # Parse the CSV content
             csv_data = response.text.splitlines()
             reader = csv.DictReader(csv_data)
             bulk_profiles = [row for row in reader]  # Convert to list of dictionaries
@@ -58,13 +76,21 @@ def fetch_profiles():
 
 @app.route('/fetch-data', methods=['GET'])
 def fetch_data():
-    """Fetch company data by symbol."""
-    symbol = request.args.get('query')  # The company symbol
+    """
+    Fetch company profile by symbol.
+    
+    Args:
+        symbol (str): The company symbol to search for.
+    
+    Returns:
+        dict: The company profile if found, or an error message if not found.
+    """
+
+    symbol = request.args.get('query')
 
     if not bulk_profiles:
         fetch_profiles()
 
-    # Find the company by symbol from the pre-loaded profiles
     company = next((profile for profile in bulk_profiles if profile['symbol'].strip() == symbol.strip()), None)
     if company:
         print(f"Fetched {company} profile.")
@@ -74,9 +100,18 @@ def fetch_data():
     
 @app.route('/fetch-income', methods=['GET'])
 def fetch_income():
-    """Fetch income statement for a specific company."""
+    """
+    Fetch income statement for a specific company.
+    
+    Args:
+        symbol (str): The company symbol to retrieve income statement for.
+    
+    Returns:
+        dict: The income statement if found, or an error message if not found.
+    """
+
     global current_income
-    symbol = request.args.get('query')  # The company symbol
+    symbol = request.args.get('query')
     
     if not symbol:
         return jsonify({"error": "Symbol is required"}), 400
@@ -96,71 +131,66 @@ def fetch_income():
         print(f"Error fetching income statement: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-def filter_by_date_range(data, start_year, end_year):
+def filter_income(data, filter_fields):
     """
-    Filter income statement data by date range.
+    Filters income statement data based on provided filter fields.
     
     Args:
-        data (list): List of income statements (dicts).
-        start_year (int): Start year for the filter.
-        end_year (int): End year for the filter.
+        data (List[dict]): The dataset to filter (income statements).
+        filter_fields (dict): Dictionary of fields (e.g., 'revenue', 'date') with [min, max] ranges.
     
     Returns:
-        list: Filtered list of income statements.
+        List[dict]: Filtered dataset that matches the given conditions.
+    
+    Notes:
+        - Numeric fields (e.g., 'revenue', 'netIncome') are filtered based on the given range.
+        - 'Date' is filtered by year (converted from "YYYY-MM-DD").
+        - Fields not in the data are skipped.
     """
-    filtered_data = [row for row in current_income if start_year <= int(row['date'][:4]) <= end_year]
+        
+    filtered_data = data[:]
+    
+    for field, value in filter_fields.items():
+        if field.endswith("_min"):
+            base_field = field[:-4]  
+            min_value = value
+            max_value = filter_fields.get(f"{base_field}_max")
+            if max_value is not None:
+                if min_value is not None and max_value is not None:
+                    filtered_data = [
+                        record for record in filtered_data
+                        if min_value <= record.get(base_field, float('inf')) <= max_value
+                    ]
+        elif field.endswith("_max"):
+            continue 
+            
     return filtered_data
 
 
-def filter_by_revenue(data, min_revenue, max_revenue):
-    """
-    Filter income statement data by revenue range.
-    
-    Args:
-        data (list): List of income statements (dicts).
-        min_revenue (float): Minimum revenue for the filter.
-        max_revenue (float): Maximum revenue for the filter.
-    
-    Returns:
-        list: Filtered list of income statements.
-    """
-    filtered_data = [row for row in current_income if min_revenue <= row['revenue'] <= max_revenue]
-    return filtered_data
-
-
-def filter_by_net_income(data, min_income, max_income):
-    """
-    Filter income statement data by net income range.
-    
-    Args:
-        data (list): List of income statements (dicts).
-        min_income (float): Minimum net income for the filter.
-        max_income (float): Maximum net income for the filter.
-    
-    Returns:
-        list: Filtered list of income statements.
-    """
-    filtered_data = [row for row in current_income if min_income <= row['netIncome'] <= max_income]
-    return filtered_data
-
-def sort_income(field, ascending=True):
+def sort_income(data, field, ascending=True):
     """
     Sort the income statement by the specified field.
     
     Args:
-        field (str): The field to sort by ('date', 'revenue', 'netIncome').
+        data (List[dict]): The dataset to sort.
+        field (str): The field to sort by (any valid field in the income statement).
         ascending (bool): Whether to sort in ascending order. Default is True.
     
     Returns:
         List[dict]: Sorted income statement.
     """
-    valid_fields = {'date', 'revenue', 'netIncome'}
-    if field not in valid_fields:
-        raise ValueError(f"Invalid field. Choose from {valid_fields}")
+    
+    if not data:
+        return []
+    
+    if field not in data[0]:
+        raise ValueError(f"Invalid field '{field}'. Please provide a valid field name.")
 
     return sorted(
-        current_income,
-        key=lambda x: x[field] if field != 'date' else int(x['date'][:4]),
+        data,
+        key=lambda x: (
+            int(x[field][:4]) if field == 'date' and isinstance(x[field], str) else x[field]
+        ),
         reverse=not ascending
     )
 
@@ -170,46 +200,38 @@ def filter_sort_income():
     Endpoint to filter and sort income statements based on user input.
     
     Expects JSON payload with optional parameters:
-        - start_year (int): Start of date range.
-        - end_year (int): End of date range.
-        - min_revenue (float): Minimum revenue filter.
-        - max_revenue (float): Maximum revenue filter.
-        - min_income (float): Minimum net income filter.
-        - max_income (float): Maximum net income filter.
         - sort_field (str): Field to sort by ('date', 'revenue', 'netIncome').
         - ascending (bool): Sort order, default is ascending.
+        - fields (dict): Dictionary of fields with min/max ranges to filter by. 
+          Example: {"revenue": [min_value, max_value], "netIncome": [min_value, max_value], "date": [min_year, max_year]}.
     
     Returns:
         JSON: Filtered and sorted income statements.
     """
+
+    global current_income
+    params = request.args.get('query')
+    
+    if not params:
+        return jsonify({"error": "Params required"}), 400
+
     try:
+        # Parse the query string into a dictionary
+        params_dict = json.loads(params)
+
         # Extract query parameters
-        start_year = request.args.get('start_year', type=int)
-        end_year = request.args.get('end_year', type=int)
-        min_revenue = request.args.get('min_revenue', type=float)
-        max_revenue = request.args.get('max_revenue', type=float)
-        min_income = request.args.get('min_income', type=float)
-        max_income = request.args.get('max_income', type=float)
-        sort_field = request.args.get('sort_field', type=str)
-        ascending = request.args.get('ascending', default='true').lower() == 'true'
-        
-        # Apply filters in sequence if parameters are provided
+        sort_field = params_dict.get('sort_field')
+        ascending = params_dict.get('ascending', True)
+        filter_fields = params_dict.get('fields', {})
+
         filtered_data = current_income[:]  # Start with the full dataset
         
-        if start_year is not None and end_year is not None:
-            filtered_data = filter_by_date_range(filtered_data, start_year, end_year)
+        filtered_data = filter_income(current_income, filter_fields)
         
-        if min_revenue is not None and max_revenue is not None:
-            filtered_data = filter_by_revenue(filtered_data, min_revenue, max_revenue)
-        
-        if min_income is not None and max_income is not None:
-            filtered_data = filter_by_net_income(filtered_data, min_income, max_income)
-        
-        # Apply sorting if a sort field is provided
         if sort_field:
             filtered_data = sort_income(filtered_data, sort_field, ascending)
         
-        return jsonify({"status": "success", "data": filtered_data}), 200
+        return jsonify(filtered_data), 200
     
     except Exception as e:
         print(f"Error in filter_sort_income: {e}")

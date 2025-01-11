@@ -16,15 +16,8 @@ Styling: TailwindCSS
 Backend : Python with Flask
 
 
-## Design Choices
-### Frontend Design
-
-TBA
-
-
-### Data Visualization Choices
-
-TBA
+## AI Policy
+Most of my projects use CoPilot, and this is no exception. I do not believe my time is best spent doing simple tasks like creating types for an API call from scratch when we have optimization tools available. What LLMs cannot do: LLM code suggests excessive use of dependencies to do otherwise simple tasks, it is not able to abstract components or organize a file system. While it can create great code comments for easy future maintenance these can often be done either to excess or too brief without human oversight. It absolutely had no idea how to work with a frontend to backend api call using react despite it being quite a basic useFetch function and regularly suggested I filter using the frontend only despite this not being optimal for larger scale data frameworks. These sorts of intricacies require understanding clean code principles and how to create maintainable, not just functional, software. LLMs are a tool, just like a calculator, not a shortcut that will ultimately lead you to being a high level contributor on your development team without a deep understanding of what you aim to create.
 
 ## Instructions to Run Locally
 ### Prerequisites:
