@@ -31,8 +31,8 @@ Most of my projects use CoPilot, and this is no exception. I do not believe my t
 1. Clone the repository:
 
 ```
-git clone https://github.com/your-username/profit-princess.git
-cd profit-princess
+git clone https://github.com/your-username/ProfitPrincess.git
+cd ProfitPrincess
 ```
 
 2. Install the required dependencies:
@@ -49,7 +49,12 @@ npm start
 
 ### Backend Setup:
 
-1. Navigate to the backend folder.
+1. Clone the repository:
+
+```
+git clone https://github.com/your-username/ProfitPrincessAPI.git
+cd ProfitPrincessAPI
+```
 
 2. Create a .env file with your API key:
 
