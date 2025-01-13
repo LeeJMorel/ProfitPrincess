@@ -19,7 +19,7 @@ const NotFound: React.FC<NotFoundProps> = ({ onRefresh }) => {
           className="bg-darkest text-white py-2 px-6 rounded-full text-xl transform transition-transform hover:scale-110"
           onClick={onRefresh}
         >
-          Try "AAPL.NE" ✨
+          Try "AAPL" ✨
         </button>
       </div>
     </div>
