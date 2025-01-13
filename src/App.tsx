@@ -6,7 +6,7 @@ import DataTable from "./components/DataTable";
 import Card from "./components/Card";
 
 const App: React.FC = () => {
-  const [symbol, setSymbol] = useState<string>("AAPL.NE"); // Default selection
+  const [symbol, setSymbol] = useState<string>("AAPL"); // Default selection
   const [loadScreen, setLoadScreen] = useState(true);
 
   const { data: company, isLoading, error } = useFetchBySymbol(symbol);
