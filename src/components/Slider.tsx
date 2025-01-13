@@ -92,6 +92,9 @@ const TooltipSlider: React.FC<TooltipSliderProps> = ({
     <Slider
       {...props}
       handleRender={tipHandleRender}
+      handleStyle={{
+        border: "2px solid #FF1493",
+      }}
       styles={{
         track: {
           background: "pink",
