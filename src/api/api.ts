@@ -1,18 +1,6 @@
 import useFetch from "../hooks/useFetch";
 import { CompanyProfile, FilterSortParams, IncomeStatement } from "../types";
 
-// Set to 'true' to use the local API during development
-const USE_LOCAL_API = false;
-
-const API_BASE_URL = USE_LOCAL_API
-  ? "http://localhost:5000" // Local backend server URL (ensure it's running on this port)
-  : "https://profit-princess-api.vercel.app"; // Deployed backend URL on Vercel
-
-/**
- * Fetches company profile data by symbol.
- * @param symbol - The stock symbol to query for.
- * @returns An object containing the company profile data, loading status, and error (if any).
- */
 export const useFetchBySymbol = (
   symbol: string
 ): {
@@ -20,7 +8,8 @@ export const useFetchBySymbol = (
   isLoading: boolean;
   error: string | null;
 } => {
-  return useFetch(`${API_BASE_URL}/fetch-data?query=${symbol}`);
+  // return useFetch(`/api/fetch-data?query=${symbol}`);
+  return useFetch(`http://localhost:5000/fetch-data?query=${symbol}`);
 };
 
 /**
@@ -35,7 +24,8 @@ export const useFetchBySymbolIncome = (
   isLoading: boolean;
   error: string | null;
 } => {
-  return useFetch(`${API_BASE_URL}/fetch-income?query=${symbol}`);
+  // return useFetch(`/api/fetch-income?query=${symbol}`);
+  return useFetch(`http://localhost:5000/fetch-income?query=${symbol}`);
 };
 
 /**
@@ -52,5 +42,9 @@ export const useFetchSort = (
 } => {
   const query = JSON.stringify(params);
   const encodedQuery = encodeURIComponent(query);
-  return useFetch(`${API_BASE_URL}/filter-sort-income?query=${encodedQuery}`);
+
+  // return useFetch(`/api/filter-sort-income?query=${encodedQuery}`);
+  return useFetch(
+    `http://localhost:5000/filter-sort-income?query=${encodedQuery}`
+  );
 };
