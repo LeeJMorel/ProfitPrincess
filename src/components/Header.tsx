@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { HeaderProps } from "../types";
 
 const Header: React.FC<HeaderProps> = ({ company, onCompanyChange }) => {
+  // Ref for the input symbol
+  const inputSymbolRef = useRef<HTMLInputElement>(null);
+
   // Local state to manage user input for the company symbol
   const [inputSymbol, setInputSymbol] = useState<string>("");
 
@@ -16,6 +19,10 @@ const Header: React.FC<HeaderProps> = ({ company, onCompanyChange }) => {
     if (inputSymbol) {
       onCompanyChange(inputSymbol);
       setInputSymbol(""); // Clear the input field after submission
+      // Optionally focus the input again after clearing
+      if (inputSymbolRef.current) {
+        inputSymbolRef.current.focus();
+      }
     }
   };
 
@@ -31,7 +38,9 @@ const Header: React.FC<HeaderProps> = ({ company, onCompanyChange }) => {
             className="w-24 h-24 object-contain rounded-full border-4 border-white shadow-md"
           />
           <div>
-            <h1 className="text-3xl font-semibold">{company.companyName}</h1>
+            <h1 className="font-barbie text-3xl font-semibold">
+              {company.companyName}
+            </h1>
             <p className="text-xl">{company.symbol}</p>
             <p className="italic">{company.industry}</p>
           </div>
@@ -43,6 +52,7 @@ const Header: React.FC<HeaderProps> = ({ company, onCompanyChange }) => {
           className="mt-4 sm:mt-0 flex sm:justify-end space-x-4 items-center w-full sm:w-auto"
         >
           <input
+            ref={inputSymbolRef}
             type="text"
             value={inputSymbol}
             onChange={handleSymbolChange}

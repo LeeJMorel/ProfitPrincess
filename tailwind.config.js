@@ -9,6 +9,9 @@ module.exports = {
         dark: "#E7549F",
         darkest: "#CF3E8A",
       },
+      fontFamily: {
+        barbie: ['"BarbieFont"', "sans-serif"],
+      },
     },
     backgroundImage: {
       "gradient-barbie": "linear-gradient(90deg, #FF69B4, #FF1493)",

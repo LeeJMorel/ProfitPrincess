@@ -6,31 +6,49 @@ import { downArrow, downUpArrow, upArrow } from "../assets/Icon";
 import "rc-slider/assets/index.css";
 import TooltipSlider from "./Slider";
 
-const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
+const DataTable: React.FC<DataTableProps> = ({
+  symbol,
+  columns,
+  onDataChange,
+}) => {
   const {
     data: initialData,
     isLoading: initialLoading,
     error: initialError,
   } = useFetchBySymbolIncome(symbol);
 
+  // State for managing sorting parameters
   const [sortParams, setSortParams] = useState<FilterSortParams>({
     sort_field: undefined,
     ascending: true,
     fields: {},
   });
 
+  // State for managing filter ranges (for sliders)
   const [filterRanges, setFilterRanges] = useState<
     Record<string, [number, number]>
   >({});
 
+  // State for storing min/max values of each column for the slider
   const [sliderMinMax, setSliderMinMax] = useState<{
     [key: string]: [number, number];
   }>({});
 
-  // Track if the data is available for the company
+  // State for checking if data is available
   const [hasData, setHasData] = useState<boolean>(false);
 
-  // Combine filterRanges into fields in sortParams
+  // Update hasData based on initialData availability
+  useEffect(() => {
+    if (initialData && initialData.length > 0) {
+      setHasData(true);
+      // Send initial data back to the parent when data is available
+      onDataChange(initialData);
+    } else {
+      setHasData(false);
+    }
+  }, [initialData, onDataChange]);
+
+  // Combine sorting and filtering parameters for fetching sorted data
   const combinedParams = {
     ...sortParams,
     fields: {
@@ -46,14 +64,18 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
     },
   };
 
+  // Fetch sorted data based on combined parameters
   const {
     data: sortedData,
     isLoading: sortLoading,
     error: sortError,
   } = useFetchSort(combinedParams);
 
+  // Determine if sorting or filtering is active
   const isSortingActive =
     sortParams.sort_field !== undefined || Object.keys(filterRanges).length > 0;
+
+  // Select data based on whether sorting is active
   const data = isSortingActive ? sortedData : initialData;
   const isLoading = isSortingActive ? sortLoading : initialLoading;
   const error = isSortingActive ? sortError : initialError;
@@ -70,7 +92,7 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
     }
   }, [initialData]);
 
-  // Handle sorting by updating sortParams
+  // Handle sorting of a given column
   const handleSort = (field: keyof IncomeStatement) => {
     setSortParams((prev) => ({
       sort_field: field,
@@ -79,11 +101,12 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
     }));
   };
 
-  // Handle range change and update filterRanges
+  // Handle changes in filter range (sliders)
   const handleRangeChange = (field: string, range: [number, number]) => {
     setFilterRanges((prev) => ({ ...prev, [field]: range }));
   };
 
+  // Get min/max slider values for a specific column
   const getSliderValues = (col: keyof IncomeStatement): [number, number] => {
     const columnData = validData.map((item) => item[col]);
 
@@ -117,6 +140,7 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
     }
   }, [initialData, columns]);
 
+  // Get the appropriate arrow icon based on the sorting state
   const getArrow = (field: keyof IncomeStatement) => {
     if (sortParams.sort_field !== field) {
       return <img src={downUpArrow} alt="Default sort" className="w-4 h-4" />;
@@ -131,8 +155,8 @@ const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
     );
   };
 
+  // Reset sorting and filters
   const handleReset = () => {
-    // Implement reset logic (reset filter ranges and sorting)
     setFilterRanges({});
     setSortParams({ sort_field: undefined, ascending: true, fields: {} });
   };

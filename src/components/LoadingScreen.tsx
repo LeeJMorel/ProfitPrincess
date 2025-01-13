@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { LoadingScreenProps } from "../types";
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ onLoaded }) => {
-  const [isLoading, setIsLoading] = useState(true);
-
+const LoadingScreen: React.FC<LoadingScreenProps> = ({
+  isLoading,
+  onLoaded,
+}) => {
   useEffect(() => {
-    // Simulate loading process
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      onLoaded();
-    }, 5000); // 3 seconds loading time
-    return () => clearTimeout(timer);
-  }, [onLoaded]);
+    if (!isLoading) {
+      // If isLoading becomes false, simulate the timeout for completion
+      const timer = setTimeout(() => {
+        onLoaded();
+      }, 3000); // 3 seconds loading time
+
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, onLoaded]);
 
   return (
     <div
@@ -20,7 +23,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onLoaded }) => {
       } bg-gradient-barbie`}
     >
       <div className="text-center">
-        <h1 className="font-bold text-white">
+        <h1 className="font-barbie font-bold text-white">
           {/* Desktop single-line text with space between words */}
           <span className="hidden md:inline-block text-[10vw]">{`Profit Princess`}</span>
 
