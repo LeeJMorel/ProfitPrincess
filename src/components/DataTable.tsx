@@ -1,35 +1,36 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { IncomeStatement, DataTableProps, FilterSortParams } from "../types";
-import { useFetchSort } from "../api/api";
+import { useFetchBySymbolIncome, useFetchSort } from "../api/api";
 import { downArrow, downUpArrow, upArrow } from "../assets/Icon";
-import TooltipSlider from "./Slider";
 import "rc-slider/assets/index.css";
+import TooltipSlider from "./Slider";
 
-const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
-  // State for managing sorting parameters
+const DataTable: React.FC<DataTableProps> = ({ symbol, columns }) => {
+  const {
+    data: initialData,
+    isLoading: initialLoading,
+    error: initialError,
+  } = useFetchBySymbolIncome(symbol);
+
   const [sortParams, setSortParams] = useState<FilterSortParams>({
     sort_field: undefined,
     ascending: true,
     fields: {},
   });
 
-  // State for managing filter ranges (for sliders)
   const [filterRanges, setFilterRanges] = useState<
     Record<string, [number, number]>
   >({});
 
-  // State for storing min/max values of each column for the slider
   const [sliderMinMax, setSliderMinMax] = useState<{
     [key: string]: [number, number];
   }>({});
 
-  // State for checking if data is available
+  // Track if the data is available for the company
   const [hasData, setHasData] = useState<boolean>(false);
 
-  // State for filtered data (after applying sorting and filtering)
-  const [filteredData, setFilteredData] = useState<IncomeStatement[]>([]);
-
-  // Combine sorting and filtering parameters for fetching sorted data
+  // Combine filterRanges into fields in sortParams
   const combinedParams = {
     ...sortParams,
     fields: {
@@ -45,35 +46,31 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
     },
   };
 
-  // Fetch sorted data based on combined parameters
   const {
     data: sortedData,
     isLoading: sortLoading,
     error: sortError,
   } = useFetchSort(combinedParams);
 
-  // Determine if sorting or filtering is active
   const isSortingActive =
     sortParams.sort_field !== undefined || Object.keys(filterRanges).length > 0;
+  const data = isSortingActive ? sortedData : initialData;
+  const isLoading = isSortingActive ? sortLoading : initialLoading;
+  const error = isSortingActive ? sortError : initialError;
 
-  // Select data based on whether sorting is active
-  const data = isSortingActive
-    ? sortedData
-    : filteredData.length > 0
-    ? filteredData
-    : initialData ?? [];
-  const isLoading = isSortingActive ? sortLoading : false;
-  const error = sortError;
+  // Fallback to empty array if `data` is null or undefined
+  const validData = data ?? [];
 
-  // Set initial data and set the 'hasData' state
+  // Set initial data availability
   useEffect(() => {
-    if (initialData) {
-      setHasData(initialData.length > 0);
-      setFilteredData(initialData);
+    if (initialData && initialData.length > 0) {
+      setHasData(true);
+    } else {
+      setHasData(false);
     }
   }, [initialData]);
 
-  // Handle sorting of a given column
+  // Handle sorting by updating sortParams
   const handleSort = (field: keyof IncomeStatement) => {
     setSortParams((prev) => ({
       sort_field: field,
@@ -82,40 +79,34 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
     }));
   };
 
-  // Handle changes in filter range (sliders)
+  // Handle range change and update filterRanges
   const handleRangeChange = (field: string, range: [number, number]) => {
     setFilterRanges((prev) => ({ ...prev, [field]: range }));
   };
 
-  // Get min/max slider values for a specific column
   const getSliderValues = (col: keyof IncomeStatement): [number, number] => {
-    if (!data || data.length === 0) {
-      return [0, 0]; // Default return values if no data is available
-    }
+    const columnData = validData.map((item) => item[col]);
 
-    const columnData = data.map((item) => item[col]);
     const isDateField = col.includes("date");
 
     if (isDateField) {
       const minYear = Math.min(
-        ...columnData.map((item: string | number | Date) =>
-          new Date(item).getFullYear()
-        )
+        ...columnData.map((item) => new Date(item).getFullYear())
       );
       const maxYear = Math.max(
-        ...columnData.map((item: string | number | Date) =>
-          new Date(item).getFullYear()
-        )
+        ...columnData.map((item) => new Date(item).getFullYear())
       );
       return [minYear, maxYear];
     }
 
-    const minValue = Math.min(...columnData.map((item: any) => Number(item)));
-    const maxValue = Math.max(...columnData.map((item: any) => Number(item)));
+    const minValue = Math.min(...columnData.map((item) => Number(item)));
+    const maxValue = Math.max(...columnData.map((item) => Number(item)));
+
+    // Ensure valid [number, number] tuple
     return [minValue, maxValue];
   };
 
-  // Initialize the slider min/max values when initial data is loaded
+  // Set initial slider min/max only once when the data loads
   useEffect(() => {
     if (initialData && initialData.length > 0) {
       const initialSliderValues = columns.reduce((acc, col) => {
@@ -126,7 +117,6 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
     }
   }, [initialData, columns]);
 
-  // Get the appropriate arrow icon based on the sorting state
   const getArrow = (field: keyof IncomeStatement) => {
     if (sortParams.sort_field !== field) {
       return <img src={downUpArrow} alt="Default sort" className="w-4 h-4" />;
@@ -141,15 +131,26 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
     );
   };
 
-  // Reset sorting and filters
   const handleReset = () => {
+    // Implement reset logic (reset filter ranges and sorting)
     setFilterRanges({});
     setSortParams({ sort_field: undefined, ascending: true, fields: {} });
-    setFilteredData(initialData ?? []); // Reset to initial data when filters are reset
   };
 
+  /*
+  This "if error" slightly redundant as I render this by default when no data is available. 
+  Theoretically it should only render this given a 404 error 
+  but I did not have time fore proper testing frameworks 
+  to really ensure a high quality user experience 
+  so this placeholder handles that for now.
+  */
   if (error) {
-    return <div className="text-gray-600">Error fetching sorted data.</div>;
+    return (
+      <div className="text-gray-600">
+        This company may not have data available. Try a different company
+        symbol, for example: AAPL.NE or AGO.WA.
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -158,7 +159,7 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
 
   return (
     <div className="DataTable p-4">
-      {data && data.length > 0 ? (
+      {validData && validData.length > 0 ? (
         <>
           <div className="overflow-x-auto">
             <table className="table-auto min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -185,7 +186,7 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
                             {getArrow(col as keyof IncomeStatement)}
                           </span>
                         </div>
-                        {(typeof data[0][col as keyof IncomeStatement] ===
+                        {(typeof validData[0][col as keyof IncomeStatement] ===
                           "number" ||
                           col.includes("date")) &&
                           sliderMinMax[col] && (
@@ -202,9 +203,9 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
                                   handleRangeChange(
                                     col,
                                     value as [number, number]
-                                  );
+                                  ); // Type assertion
                                 } else {
-                                  handleRangeChange(col, [value, value]);
+                                  handleRangeChange(col, [value, value]); // Treat as range
                                 }
                               }}
                             />
@@ -215,7 +216,7 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
                 </tr>
               </thead>
               <tbody className="text-gray-700">
-                {data.map((incomeStatement: IncomeStatement) => (
+                {validData.map((incomeStatement: IncomeStatement) => (
                   <tr
                     key={incomeStatement.date}
                     className="border-t hover:bg-gray-50"
@@ -253,7 +254,7 @@ const DataTable: React.FC<DataTableProps> = ({ columns, initialData }) => {
               </div>
             </>
           ) : (
-            "This company may not have data available. Try a different company symbol."
+            "This company may not have data available. Try a different company symbol, for example: AAPL.NE or AGO.WA."
           )}
         </div>
       )}
