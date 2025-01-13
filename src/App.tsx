@@ -9,14 +9,9 @@ import FinancialLineChart from "./components/FinancialLineChart";
 
 const App: React.FC = () => {
   const [symbol, setSymbol] = useState<string>("AAPL"); // Default selection
-  const [loadScreen, setLoadScreen] = useState(true);
   const [incomeData, setIncomeData] = useState<IncomeStatement[] | null>(null); // Store income data
 
   const { data: company, isLoading, error } = useFetchBySymbol(symbol);
-
-  const handleLoadingComplete = () => {
-    setLoadScreen(false);
-  };
 
   const handleSymbolChange = (newSymbol: string) => {
     setSymbol(newSymbol); // Update the symbol state and trigger fetching
@@ -32,14 +27,14 @@ const App: React.FC = () => {
   }
 
   if (isLoading) {
-    return <LoadingScreen onLoaded={handleLoadingComplete} isLoading={true} />;
+    return <LoadingScreen isLoading={true} />;
   }
 
   return (
     <div className="App">
       {company && (
         <>
-          <LoadingScreen onLoaded={handleLoadingComplete} isLoading={false} />
+          <LoadingScreen isLoading={false} />
           <div>
             <Header company={company} onCompanyChange={handleSymbolChange} />
             <Card

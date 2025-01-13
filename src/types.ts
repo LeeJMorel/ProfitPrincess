@@ -28,7 +28,6 @@ export interface HeaderProps {
 
 export interface LoadingScreenProps {
   isLoading: boolean;
-  onLoaded: () => void;
 }
 
 export interface IncomeStatement {

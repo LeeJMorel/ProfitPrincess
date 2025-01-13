@@ -1,21 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { LoadingScreenProps } from "../types";
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({
-  isLoading,
-  onLoaded,
-}) => {
-  useEffect(() => {
-    if (!isLoading) {
-      // If isLoading becomes false, simulate the timeout for completion
-      const timer = setTimeout(() => {
-        onLoaded();
-      }, 3000); // 3 seconds loading time
-
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, onLoaded]);
-
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ isLoading }) => {
   return (
     <div
       className={`fixed top-0 left-0 w-full h-full flex items-center justify-center transition-opacity duration-1000 ${
